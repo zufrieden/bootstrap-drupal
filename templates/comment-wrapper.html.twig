@@ -1,0 +1,16 @@
+<section id="comments" class="{{ classes }}"{{ attributes }}>
+  {% if content.comments and node.type != 'forum' %}
+    {{ title_prefix }}
+    <h2 class="title">{{ 'Comments'|t }}</h2>
+    {{ title_suffix }}
+  {% endif %}
+
+  {{ content.comments }}
+
+  {% if content.comment_form %}
+    <section id="comment-form-wrapper" class="well">
+      <h2 class="title">{{ 'Add new comment'|t }}</h2>
+      {{ content.comment_form }}
+    </section> <!-- /#comment-form-wrapper -->
+  {% endif %}
+</section> <!-- /#comments -->

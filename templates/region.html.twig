@@ -1,5 +1,4 @@
-<?php
-
+{#
 /**
  * @file
  * Default theme implementation to display a region.
@@ -24,10 +23,9 @@
  * @see template_preprocess()
  * @see template_preprocess_region()
  * @see template_process()
- */
-?>
-<?php if ($content): ?>
-  <div class="<?php print $classes; ?>">
-    <?php print $content; ?>
+ */#}
+{% if content %}
+  <div class="{{ classes }}">
+    {{ content }}
   </div>
-<?php endif; ?>
+{% endif %}

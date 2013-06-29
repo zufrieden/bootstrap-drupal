@@ -1,0 +1,58 @@
+name: Bootstrap
+type: theme
+description: 'Built to use Bootstrap, a sleek, intuitive, and powerful front-end framework for faster and easier web development.'
+package: Core
+version: VERSION
+core: 8.x
+regions:
+  page_top: 'Page top'
+  navigation: Navigation
+  header: Top Bar
+  highlighted: Highlighted
+  help: Help
+  content: Content
+  sidebar_first: 'Primary'
+  sidebar_second: 'Secondary'
+  footer: Footer
+  page_bottom: 'Page bottom'
+# @todo D8: Remove once themes have to be installed.
+settings:
+  toggle_name: '0'
+  toggle_search: '1'
+  cdn_bootstrap: '1'
+  cdn_bootstrap_version: '2.3.2'
+
+exclude:
+  # js:
+  #   - modules/contextual/contextual.js
+  css:
+    - modules/aggregator/aggregator.css
+    - modules/aggregator/aggregator.css
+    - modules/block/block.css
+    - modules/book/book.css
+    - modules/comment/comment.css
+    - modules/dblog/dblog.css
+    - modules/file/file.css
+    - modules/filter/filter.css
+    - modules/forum/forum.css
+    - modules/help/help.css
+    - modules/menu/menu.css
+    - modules/node/node.css
+    - modules/openid/openid.css
+    - modules/poll/poll.css
+    - modules/search/search.css
+    - modules/statistics/statistics.css
+    - modules/syslog/syslog.css
+    # - modules/system/admin.css
+    - modules/system/maintenance.css
+    # - modules/system/system.css
+    # - modules/system/system.admin.css
+    # - modules/system/system.base.css
+    - modules/system/system.maintenance.css
+    - modules/system/system.menus.css
+    - modules/system/system.messages.css
+    - modules/system/system.theme.css
+    - modules/taxonomy/taxonomy.css
+    - modules/tracker/tracker.css
+    - modules/update/update.css
+    - modules/user/user.css

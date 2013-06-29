@@ -1,0 +1,36 @@
+<article class="{# PHP: print $classes . ' ' . $zebra; #}"{{ attributes }}>
+  
+  <header>
+    <p class="submitted">
+      {{ picture }}
+      {{ submitted }}
+      {{ permalink }}
+    </p>
+
+    {{ title_prefix }}
+    {% if title %}
+      <h3{{ title_attributes }}>
+        {{ title }}
+        {% if new %}
+          <mark class="new label label-important">{{ new }}</mark>
+        {% endif %}
+      </h3>
+    {% elseif new %}
+      <mark class="new label label-important">{{ new }}</mark>
+    {% endif %}
+    {{ title_suffix }}
+  </header>
+
+  {#
+// We hide the comments and links now so that we can render them later.
+#}    {% hide(content.links) %}
+    {{ content }}
+
+  {% if signature %}
+    <footer class="user-signature clearfix">
+      {{ signature }}
+    </footer>
+  {% endif %}
+
+  {{ content.links }}
+</article> <!-- /.comment -->
