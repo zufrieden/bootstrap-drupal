@@ -779,9 +779,6 @@ array(
 function bootstrap_preprocess_bootstrap_append_element(&$variables) {
   $element = &$variables['element'];
 
-  // This is also used in the installer, pre-database setup.
-  $t = get_t();
-
   // This function is invoked as theme wrapper, but the rendered form element
   // may not necessarily have been processed by form_builder().
   $element += array(
@@ -983,7 +980,7 @@ function bootstrap_preprocess_breadcrumb(&$variables) {
 function bootstrap_preprocess_item_list(&$variables) {
   $items = $variables['items'];
   $title = $variables['title'];
-  $type = $variables['type'];
+  $type = $variables['list_type'];
   $attributes = $variables['attributes'];
   $output = '';
 
@@ -1417,8 +1414,6 @@ function bootstrap_preprocess_button(&$variables) {
  */
 function bootstrap_preprocess_form_element(&$variables) {
   $element = &$variables['element'];
-  // This is also used in the installer, pre-database setup.
-  $t = get_t();
 
   // This function is invoked as theme wrapper, but the rendered form element
   // may not necessarily have been processed by form_builder().
@@ -1527,8 +1522,6 @@ array(
  */
 function bootstrap_preprocess_form_element_label(&$variables) {
   $element = $variables['element'];
-  // This is also used in the installer, pre-database setup.
-  $t = get_t();
 
   // If title and required marker are both empty, output no label.
   if ((!isset($element['#title']) || $element['#title'] === '') && empty($element['#required'])) {
@@ -1566,7 +1559,7 @@ function bootstrap_preprocess_form_element_label(&$variables) {
   }
 
   // @Bootstrap: Append label
-  $output .= $t('!title !required', array('!title' => $title, '!required' => $required));
+  $output .= t('!title !required', array('!title' => $title, '!required' => $required));
 
   // The leading whitespace helps visually separate fields from inline labels.
   $variables['bootstrap_preprocess_form_element_label'] = ' <label' . new Drupal\Core\Template\Attribute($attributes) . '>' . $output . "</label>\n";
