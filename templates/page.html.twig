@@ -20,14 +20,14 @@
         </h1>
       {% endif %}
 
-      {% if primary_nav or secondary_nav or page.navigation %}
+      {% if main_menu or secondary_menu or page.navigation %}
         <div class="nav-collapse collapse">
           <nav role="navigation">
-            {% if primary_nav %}
-              {{ primary_nav }}
+            {% if main_menu %}
+              {{ main_menu }}
             {% endif %}
-            {% if secondary_nav %}
-              {{ secondary_nav }}
+            {% if secondary_menu %}
+              {{ secondary_menu }}
             {% endif %}
             {% if page.navigation %}
               {{ page.navigation }}
@@ -55,8 +55,8 @@
       <aside class="span3" role="complementary">
         {{ page.sidebar_first }}
       </aside>  <!-- /#sidebar-first -->
-    {% endif %}  
-    <section class="{{ page.content_span }}">  
+    {% endif %}
+    <section class="{{ content_span }}">
       {% if page.highlighted %}
         <div class="highlighted hero-unit">{{ page.highlighted }}</div>
       {% endif %}

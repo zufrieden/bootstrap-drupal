@@ -1,11 +1,10 @@
-<section id="{{ block_html_id }}" class="{{ classes }} clearfix"{{ attributes }}>
-
+<section class="{{ attributes.class }} clearfix"{{ attributes }}>
   {{ title_prefix }}
   {% if title %}
     <h2{{ title_attributes }}>{{ title }}</h2>
   {% endif %}
   {{ title_suffix }}
-
-  {{ content }}
-  
-</section> <!-- /.block -->
+  <div{{ content_attributes }}>
+    {{ content }}
+  </div>
+</section>

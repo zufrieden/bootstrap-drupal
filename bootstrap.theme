@@ -76,21 +76,28 @@ function bootstrap_preprocess_page(&$variables) {
     $variables['columns'] = 1;
   }
   $variables['content_span'] = _bootstrap_content_span($variables['columns']);
-  // Primary nav
-  $variables['primary_nav'] = FALSE;
-  if ($variables['main_menu']) {
-    // Build links
-    $variables['primary_nav'] = menu_tree(variable_get('menu_main_links_source', 'main-menu'));
-    // Provide default theme wrapper function
-    $variables['primary_nav']['#theme_wrappers'] = array('menu_tree__primary');
+
+  // Navigation.
+  $config = Drupal::config('menu.settings');
+  $menu_enabled = Drupal::moduleHandler()->moduleExists('menu');
+  // When menu module is not enabled, we need a hardcoded default values.
+  $main_links_source = $menu_enabled ? $config->get('main_links') : 'main';
+  $secondary_links_source = $menu_enabled ? $config->get('secondary_links') : 'account';
+  if (!empty($variables['main_menu'])) {
+    $variables['main_menu'] = menu_tree($main_links_source);
+    $variables['main_menu']['#theme_wrappers'] = array('menu_tree__primary');
   }
-  // Secondary nav
-  $variables['secondary_nav'] = FALSE;
-  if ($variables['secondary_menu']) {
-    // Build links
-    $variables['secondary_nav'] = menu_tree(variable_get('menu_secondary_links_source', 'user-menu'));
-    // Provide default theme wrapper function
-    $variables['secondary_nav']['#theme_wrappers'] = array('menu_tree__secondary');
+  // Secondary Navigation.
+  if (!empty($variables['secondary_menu'])) {
+    // If the secondary menu source is set as the primary menu, we display the
+    // second level of the primary menu.
+    if ($secondary_links_source == $main_links_source) {
+      $variables['secondary_menu'] = menu_tree($main_links_source);
+    }
+    else {
+      $variables['secondary_menu'] = menu_tree($secondary_links_source);
+    }
+    $variables['secondary_menu']['#theme_wrappers'] = array('menu_tree__secondary');
   }
 }
 
@@ -105,7 +112,7 @@ function bootstrap_preprocess_region(&$variables) {
   }
 
   if ($variables['region'] == "sidebar_first") {
-    $variables['classes_array'][] = 'well';
+    $variables['attributes']['class'][] = 'well';
   }
 }
 
@@ -946,7 +953,7 @@ function bootstrap_preprocess_status_messages(&$variables) {
  */
 function bootstrap_preprocess_breadcrumb(&$variables) {
   $breadcrumb = $variables['breadcrumb'];
-
+  $breadcrumbs = '';
   if (!empty($breadcrumb)) {
     $breadcrumbs = '<ul class="breadcrumb">';
 
@@ -961,8 +968,8 @@ function bootstrap_preprocess_breadcrumb(&$variables) {
     }
     $breadcrumbs .= '</ul>';
 
-    $variables['bootstrap_preprocess_breadcrumb'] = $breadcrumbs;
   }
+  $variables['bootstrap_preprocess_breadcrumb'] = $breadcrumbs;
 }
 
 /**
@@ -1191,8 +1198,8 @@ function bootstrap_preprocess_menu_link(&$variables) {
 
   if ($element['#below']) {
 
-    // Prevent dropdown functions from being added to management menu as to not affect navbar module.
-    if (($element['#original_link']['menu_name'] == 'management') && (module_exists('navbar'))) {
+    // Prevent dropdown functions from being added to management menu as to not affect toolbar module.
+    if (($element['#original_link']['menu_name'] == 'admin') && (module_exists('toolbar'))) {
       $sub_menu = drupal_render($element['#below']);
     }
 
@@ -1226,42 +1233,6 @@ function bootstrap_preprocess_menu_link(&$variables) {
  }
   $output = l($element['#title'], $element['#href'], $element['#localized_options']);
   $variables['bootstrap_preprocess_menu_link'] = '<li' . new Drupal\Core\Template\Attribute($element['#attributes']) . '>' . $output . $sub_menu . "</li>\n";
-}
-
-/**
- * Implements hook_preprocess_HOOK() for menu-tree-primary.html.twig.
- *
- * @TODO bootstrap_preprocess_menu_tree__primary() - Needs refactoring. Move to theme.inc.php.
- *
- * The following could probably be moved to menu-tree-primary.html.twig:
- *   approximately 3 strings of markup
- */
-function bootstrap_preprocess_menu_tree__primary(&$variables) {
-  $variables['bootstrap_preprocess_menu_tree__primary'] = '<ul class="menu nav">' . $variables['tree'] . '</ul>';
-}
-
-/**
- * Implements hook_preprocess_HOOK() for menu-tree-secondary.html.twig.
- *
- * @TODO bootstrap_preprocess_menu_tree__secondary() - Needs refactoring. Move to theme.inc.php.
- *
- * The following could probably be moved to menu-tree--secondary.html.twig:
- *   approximately 3 strings of markup
- */
-function bootstrap_preprocess_menu_tree__secondary(&$variables) {
-  $variables['bootstrap_preprocess_menu_tree__secondary'] = '<ul class="menu nav pull-right">' . $variables['tree'] . '</ul>';
-}
-
-/**
- * Implements hook_preprocess_HOOK() for menu-tree.html.twig.
- *
- * @TODO bootstrap_preprocess_menu_tree() - Needs refactoring. Move to theme.inc.php.
- *
- * The following could probably be moved to menu-tree.html.twig:
- *   approximately 3 strings of markup
- */
-function bootstrap_preprocess_menu_tree(&$variables) {
-  $variables['bootstrap_preprocess_menu_tree'] = '<ul class="menu nav">' . $variables['tree'] . '</ul>';
 }
 
 /**
