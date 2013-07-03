@@ -1,24 +1,22 @@
 <?php
 
 /**
- * Implementation of bootstrap_theme function.
+ * Implements hook_theme().
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO bootstrap_theme() - Replace with new flood class.
  */
-function bootstrap_theme(&$existing, $type, $theme, $path) {
-  // If we are auto-rebuilding the theme registry, warn about the feature.
-  if (
-    // Only display for site config admins.
-    isset($GLOBALS['user']) && function_exists('user_access') && user_access('administer site configuration')
-    && theme_get_setting('bootstrap_rebuild_registry')
-    // Always display in the admin section, otherwise limit to three per hour.
-    && (arg(0) == 'admin' || flood_is_allowed($GLOBALS['theme'] . '_rebuild_registry_warning', 3))
-  ) {
-    flood_register_event($GLOBALS['theme'] . '_rebuild_registry_warning');
-    drupal_set_message(t('For easier theme development, the theme registry is being rebuilt on every page request. It is <em>extremely</em> important to <a href="!link">turn off this feature</a> on production websites.', array('!link' => url('admin/appearance/settings/' . $GLOBALS['theme']))), 'warning', FALSE);
-  }
-  
+function bootstrap_theme() {
+//  // If we are auto-rebuilding the theme registry, warn about the feature.
+//  if (
+//    // Only display for site config admins.
+//    isset($GLOBALS['user']) && function_exists('user_access') && user_access('administer site configuration')
+//    && theme_get_setting('bootstrap_rebuild_registry')
+//    // Always display in the admin section, otherwise limit to three per hour.
+//    && (arg(0) == 'admin' || flood_is_allowed($GLOBALS['theme'] . '_rebuild_registry_warning', 3))
+//  ) {
+//    flood_register_event($GLOBALS['theme'] . '_rebuild_registry_warning');
+//    drupal_set_message(t('For easier theme development, the theme registry is being rebuilt on every page request. It is <em>extremely</em> important to <a href="!link">turn off this feature</a> on production websites.', array('!link' => url('admin/appearance/settings/' . $GLOBALS['theme']))), 'warning', FALSE);
+//  }
   return array(
     'bootstrap_links' => array(
       'variables' => array(
@@ -59,30 +57,9 @@ function bootstrap_theme(&$existing, $type, $theme, $path) {
 }
 
 /**
- * Implementation of bootstrap_process_html_tag function.
- *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
- */
-function bootstrap_process_html_tag(&$variables) {
-  $tag = &$variables['element'];
-
-  if ($tag['#tag'] == 'style' || $tag['#tag'] == 'script') {
-    // Remove redundant type attribute and CDATA comments.
-    unset($tag['#attributes']['type'], $tag['#value_prefix'], $tag['#value_suffix']);
-
-    // Remove media="all" but leave others unaffected.
-    if (isset($tag['#attributes']['media']) && $tag['#attributes']['media'] === 'all') {
-      unset($tag['#attributes']['media']);
-    }
-  }
-}
-
-/**
- * Implementation of bootstrap_preprocess_page function.
- *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * Implements hook_preprocess_HOOK() for page.html.twig.
+ * 
+ * @TODO bootstrap_preprocess_page() - Needs refactoring. Move to theme.inc.php.
  */
 function bootstrap_preprocess_page(&$variables) {
   // Add information about the number of sidebars.
@@ -98,9 +75,7 @@ function bootstrap_preprocess_page(&$variables) {
   else {
     $variables['columns'] = 1;
   }
-  
   $variables['content_span'] = _bootstrap_content_span($variables['columns']);
-
   // Primary nav
   $variables['primary_nav'] = FALSE;
   if ($variables['main_menu']) {
@@ -109,7 +84,6 @@ function bootstrap_preprocess_page(&$variables) {
     // Provide default theme wrapper function
     $variables['primary_nav']['#theme_wrappers'] = array('menu_tree__primary');
   }
-
   // Secondary nav
   $variables['secondary_nav'] = FALSE;
   if ($variables['secondary_menu']) {
@@ -118,61 +92,51 @@ function bootstrap_preprocess_page(&$variables) {
     // Provide default theme wrapper function
     $variables['secondary_nav']['#theme_wrappers'] = array('menu_tree__secondary');
   }
-
 }
 
 /**
- * Implementation of bootstrap_preprocess_region function.
- *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * Implements hook_preprocess_HOOK() for region.html.twig.
+ * 
+ * @TODO: bootstrap_preprocess_region() - Needs refactoring. Move to theme.inc.php.
  */
-function bootstrap_preprocess_region(&$variables, $hook) {
+function bootstrap_preprocess_region(&$variables) {
   if ($variables['region'] == 'content') {
     $variables['theme_hook_suggestions'][] = 'region__no_wrapper';
   }
-  
+
   if ($variables['region'] == "sidebar_first") {
     $variables['classes_array'][] = 'well';
   }
 }
 
 /**
- * Implementation of bootstrap_preprocess_block function.
+ * Implements hook_preprocess_HOOK() for block.html.twig.
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO bootstrap_preprocess_block() - Needs refactoring. Move to theme.inc.php.
  */
-function bootstrap_preprocess_block(&$variables, $hook) {
-  //$variables['classes_array'][] = 'row';
+function bootstrap_preprocess_block(&$variables) {
   // Use a bare template for the page's main content.
-  dpm($variables);
-  if ($variables['plugin_id'] == 'block-system-main') {
+  if ($variables['plugin_id'] == 'system_main_block') {
     $variables['theme_hook_suggestions'][] = 'block__no_wrapper';
   }
   $variables['title_attributes_array']['class'][] = 'block-title';
+//  $variables['classes_array'][] = 'row';
+//  Drupal 7 should use a $title variable instead of $block->subject.
+//  $variables['title'] = $variables['block']->subject;
 }
 
 /**
- * Implementation of bootstrap_process_block function.
+ * Determine content span classes.
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
- */
-function bootstrap_process_block(&$variables, $hook) {
-  // Drupal 7 should use a $title variable instead of $block->subject.
-  $variables['title'] = $variables['block']->subject;
-}
-
-/**
- * Implementation of _bootstrap_content_span function.
+ * Legacy Bootstrap helper function.
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @param int $columns
+ *   Number of columns to determine span class used.
+ * @return bool|string $class
+ *   The class name to use or FALSE number of columns is not supported.
  */
 function _bootstrap_content_span($columns = 1) {
   $class = FALSE;
-  
   switch($columns) {
     case 1:
       $class = 'span12';
@@ -184,15 +148,13 @@ function _bootstrap_content_span($columns = 1) {
       $class = 'span6';
       break;
   }
-  
   return $class;
 }
 
 /**
- * Implementation of bootstrap_theme_get_setting function.
+ * Legacy function.
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO bootstrap_theme_get_setting() - Remove/rewrite function.
  */
 function bootstrap_theme_get_setting($name, $theme = NULL) {
   switch ($name) {
@@ -203,34 +165,29 @@ function bootstrap_theme_get_setting($name, $theme = NULL) {
       $setting = theme_get_setting($name, $theme);
       break;
   }
-
-  return isset($setting) ? $setting : NULL; 
+  return isset($setting) ? $setting : NULL;
 }
 
 /**
- * Implementation of bootstrap_get_settings function.
+ * Legacy function.
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO bootstrap_get_settings() - Remove/rewrite function.
  */
 function bootstrap_get_settings($theme = NULL) {
   if (!isset($theme)) {
     $theme = !empty($GLOBALS['theme_key']) ? $GLOBALS['theme_key'] : '';
   }
-
   if ($theme) {
     $themes = list_themes();
     $theme_object = $themes[$theme];
   }
-
   return $theme_object->info['settings'];
 }
 
 /**
- * Implementation of bootstrap_theme_get_info function.
+ * Legacy function.
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO bootstrap_theme_get_info() - Remove/rewrite function.
  */
 function bootstrap_theme_get_info($setting_name, $theme = NULL) {
   // If no key is given, use the current theme if we can determine it.
@@ -259,19 +216,23 @@ function bootstrap_theme_get_info($setting_name, $theme = NULL) {
       }
     }
   }
-  
+
   return $output;
 }
 
 /**
- * Implementation of bootstrap_menu_navigation_links function.
+ * Copy of core menu_navigation_links().
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @param $tree
+ * @param int $lvl
+ *
+ * @return array $result
+ *   Returns an array of links for a navigation menu.
+ *
+ * @TODO bootstrap_menu_navigation_links() - Refactor and move into menu.inc.php.
  */
 function bootstrap_menu_navigation_links($tree, $lvl = 0) {
   $result = array();
-
   if (count($tree) > 0) {
     foreach ($tree as $id => $item) {
       // Only work with enabled links
@@ -281,40 +242,21 @@ function bootstrap_menu_navigation_links($tree, $lvl = 0) {
           'link_path' => $item['link']['link_path'],
           'href' => $item['link']['href'],
         );
-
         // Dont do drugs and don't do any levels deeper then 1
         if ($lvl < 1) {
           $new_item['below'] = bootstrap_menu_navigation_links($item['below'], $lvl+1);
         }
-
         $result['menu-'. $item['link']['mlid']] = $new_item;
       }
     }
   }
-  
   return $result;
 }
 
 /**
- * Implementation of bootstrap_bootstrap_progress_bar function.
+ * Implements hook_css_alter().
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
- */
-function bootstrap_bootstrap_progress_bar($variables) {
-  $variables['attributes']['class'][] = 'progress';
-  
-  return "<div". new Drupal\Core\Template\Attribute($variables['attributes']) .">
-  <div class=\"bar\"
-       style=\"width: ". $variables['percent'] ."%;\"></div>
-  </div>";
-}
-
-/**
- * Implementation of bootstrap_css_alter function.
- *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO bootstrap_css_alter() - Refactor if needed.
  */
 function bootstrap_css_alter(&$css) {
   $theme_path = drupal_get_path('theme', 'bootstrap');
@@ -351,31 +293,25 @@ function bootstrap_css_alter(&$css) {
 }
 
 /**
- * Implementation of bootstrap_js_alter function.
+ * Implements hook_js_alter().
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO bootstrap_js_alter() - Refactor if needed.
  */
 function bootstrap_js_alter(&$js) {
   $files = array();
-
   // Load excluded JS files from theme.
   $excludes = _bootstrap_alter(bootstrap_theme_get_info('exclude'), 'js');
-
   // If bootstrap_ui available, we should not add js from theme info file.
   if (module_exists('bootstrap_ui')) {
     libraries_load('bootstrap', 'minified');
   }
-
   $theme_path = drupal_get_path('theme', 'bootstrap');
-
   // Replace core progress bar JS with the Bootstrap equivilent.
   if (isset($js['misc/progress.js']) && !empty($js['misc/progress.js'])) {
     unset($js['misc/progress.js']);
     $progress = $theme_path . '/js/progress.js';
     $js[$progress] = drupal_js_defaults($progress);
   }
-
   // Fix broken Views AJAX pagers.
   if (module_exists('views') && !empty($js[drupal_get_path('module', 'views') . '/js/ajax_view.js'])) {
     // Override core ajax prototype function to append throbber inside links,
@@ -388,12 +324,10 @@ function bootstrap_js_alter(&$js) {
     $js[$ajax_view] = drupal_js_defaults($ajax_view);
     $js[$ajax_view]['group'] = JS_THEME;
   }
-
   $js = array_diff_key($js, $excludes);
   if (theme_get_setting('cdn_bootstrap')) {
     $files[] = '//netdna.bootstrapcdn.com/twitter-bootstrap/'. theme_get_setting('cdn_bootstrap_version')  .'/js/bootstrap.min.js';
   }
-
   // Rearrange / Add JS
   $group = -50;
   $weight = -100;
@@ -409,14 +343,12 @@ function bootstrap_js_alter(&$js) {
 }
 
 /**
- * Implementation of _bootstrap_alter function.
+ * Legacy function.
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO: _bootstrap_alter() - Remove/refactor function.
  */
 function _bootstrap_alter($files, $type) {
   $output = array();
-  
   foreach($files as $key => $value) {
     if (isset($files[$key][$type])) {
       foreach ($files[$key][$type] as $file => $name) {
@@ -428,32 +360,27 @@ function _bootstrap_alter($files, $type) {
 }
 
 /**
- * Implementation of bootstrap_preprocess_table function.
+ * Implements hook_preprocess_HOOK() for table.html.twig.
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO: bootstrap_preprocess_table() - Needs refactoring. Move to theme.inc.php.
  */
 function bootstrap_preprocess_table(&$variables) {
-
   if (isset($variables['attributes']['class']) && is_string($variables['attributes']['class'])) {
     // Convert classes to an array.
     $variables['attributes']['class'] = explode(' ', $variables['attributes']['class']);
   }
-
   $variables['attributes']['class'][] = 'table';
   if(!in_array('table-no-striping', $variables['attributes']['class'])) {
     $variables['attributes']['class'][] = 'table-striped';
   }
-  
 }
 
 /**
- * Implementation of bootstrap_form_alter function.
+ * Implements hook_form_alter().
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO: bootstrap_form_alter() - Needs refactoring. Move to form.inc.php.
  */
-function bootstrap_form_alter(&$form, &$form_state, $form_id) {
+function bootstrap_form_alter(&$form) {
   // Id's of forms that should be ignored
   // Make this configurable?
   $form_ids = array(
@@ -462,7 +389,6 @@ function bootstrap_form_alter(&$form, &$form_state, $form_id) {
     'user_profile_form',
     'node_delete_confirm',
   );
-
   // Only wrap in container for certain form
   if (isset($form['#form_id']) && !in_array($form['#form_id'], $form_ids) && !isset($form['#node_edit_form']) && isset($form['actions']) && ($form['actions']['#type'] == 'actions')) {
     $form['actions']['#theme_wrappers'] = array();
@@ -470,12 +396,11 @@ function bootstrap_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
- * Implementation of bootstrap_form_search_form_alter function.
+ * Implements hook_form_FORM_ID_alter().
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO: bootstrap_form_search_form_alter() - Needs refactoring. Move to form.inc.php.
  */
-function bootstrap_form_search_form_alter(&$form, &$form_state) {
+function bootstrap_form_search_form_alter(&$form) {
   $form['#attributes']['class'][] = 'form-search';
   $form['#attributes']['class'][] = 'pull-left';
 
@@ -495,12 +420,11 @@ function bootstrap_form_search_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Implementation of bootstrap_form_search_block_form_alter function.
+ * Implements hook_form_FORM_ID_alter().
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO: bootstrap_form_search_block_form_alter() - Needs refactoring. Move to form.inc.php.
  */
-function bootstrap_form_search_block_form_alter(&$form, &$form_state) {
+function bootstrap_form_search_block_form_alter(&$form) {
   $form['#attributes']['class'][] = 'form-search';
 
   $form['search_block_form']['#title'] = '';
@@ -518,10 +442,9 @@ function bootstrap_form_search_block_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Implementation of _bootstrap_element_whitelist function.
+ * Legacy function.
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO: _bootstrap_element_whitelist() - Needs refactoring. Move to form.inc.php.
  */
 function _bootstrap_element_whitelist() {
 /**
@@ -541,33 +464,37 @@ function _bootstrap_element_whitelist() {
 }
 
 /**
- * Implementation of bootstrap_preprocess_views_view_table function.
+ * Implements hook_preprocess_HOOK() for views-view-table.html.twig
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO: bootstrap_preprocess_views_view_table() - Needs refactoring. Move to theme.inc.php.
  */
 function bootstrap_preprocess_views_view_table(&$vars) {
   $vars['classes_array'][] = 'table';
 }
 
 /**
- * Implementation of bootstrap_preprocess_views_view_grid function.
+ * Implements hook_preprocess_HOOK() for views-view-grid.html.twig
  *
- * @param array <<any params>>
- *   <<describe the params and what they do here>>
+ * @TODO: bootstrap_preprocess_views_view_grid() - Needs refactoring. Move to theme.inc.php.
  */
 function bootstrap_preprocess_views_view_grid(&$vars) {
   $vars['class'] .= ' table';
 }
 
 /**
- * Prepares variables for [description of bootstrap_links] templates.
+ * Implements hook_preprocess_HOOK() for bootstrap-links.html.twig
  *
- * Default template: bootstrap-links.html.twig.
+ * @TODO: bootstrap_preprocess_bootstrap_links() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_bootstrap_links: the markup outputted by the original bootstrap_bootstrap_links theme function.
+ * The following could probably be moved to bootstrap-links.html.twig:
+ *   3 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 79 strings of markup
+ *   1 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
+array(
+'#theme' => 'bootstrap_links',
+'#links' => $children,
+'#attributes' => $attributes,
+)
  */
 function bootstrap_preprocess_bootstrap_links(&$variables) {
   $links = $variables['links'];
@@ -683,26 +610,26 @@ function bootstrap_preprocess_bootstrap_links(&$variables) {
 
   $variables['bootstrap_preprocess_bootstrap_links'] = $output;
 }
-/**
- * The following could probably be moved to bootstrap-links.html.twig:
- *   3 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 79 strings of markup
- *   1 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
-array(
-  '#theme' => 'bootstrap_links',
-  '#links' => $children,
-  '#attributes' => $attributes,
-)
- */
 
 /**
- * Prepares variables for [description of bootstrap_btn_dropdown] templates.
+ * Implements hook_preprocess_HOOK() for bootstrap-btn-dropdown.html.twig
  *
- * Default template: bootstrap-btn-dropdown.html.twig.
+ * @TODO: bootstrap_preprocess_bootstrap_btn_dropdown() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_bootstrap_btn_dropdown: the markup outputted by the original bootstrap_bootstrap_btn_dropdown theme function.
+ * The following could probably be moved to bootstrap-btn-dropdown.html.twig:
+ *   12 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 18 strings of markup
+ *   1 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
+array(
+'#theme' => 'links',
+'#links' => $variables['links'],
+'#attributes' => array (
+'\'class\'' =>
+array (
+0 => '\'dropdown-menu\'',
+),
+),
+)
  */
 function bootstrap_preprocess_bootstrap_btn_dropdown(&$variables) {
   $type_class = '';
@@ -738,31 +665,15 @@ function bootstrap_preprocess_bootstrap_btn_dropdown(&$variables) {
 
   $variables['bootstrap_preprocess_bootstrap_btn_dropdown'] = $output;
 }
-/**
- * The following could probably be moved to bootstrap-btn-dropdown.html.twig:
- *   12 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 18 strings of markup
- *   1 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
-array(
-  '#theme' => 'links',
-  '#links' => $variables['links'],
-  '#attributes' => array (
-  '\'class\'' => 
-  array (
-    0 => '\'dropdown-menu\'',
-  ),
-),
-)
- */
 
 /**
- * Prepares variables for [description of bootstrap_modal] templates.
+ * Implements hook_preprocess_HOOK() for bootstrap-modal.html.twig
  *
- * Default template: bootstrap-modal.html.twig.
+ * @TODO: bootstrap_preprocess_bootstrap_modal() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_bootstrap_modal: the markup outputted by the original bootstrap_bootstrap_modal theme function.
+ * The following could probably be moved to bootstrap-modal.html.twig:
+ *   15 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 18 strings of markup
  */
 function bootstrap_preprocess_bootstrap_modal(&$variables) {
   $body = $variables['body'];
@@ -786,20 +697,15 @@ function bootstrap_preprocess_bootstrap_modal(&$variables) {
 
   $variables['bootstrap_preprocess_bootstrap_modal'] = $output;
 }
-/**
- * The following could probably be moved to bootstrap-modal.html.twig:
- *   15 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 18 strings of markup
- */
 
 /**
- * Prepares variables for [description of bootstrap_accordion] templates.
+ * Implements hook_preprocess_HOOK() for bootstrap-accordion.html.twig
  *
- * Default template: bootstrap-accordion.html.twig.
+ * @TODO: bootstrap_preprocess_bootstrap_accordion() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_bootstrap_accordion: the markup outputted by the original bootstrap_bootstrap_accordion theme function.
+ * The following could probably be moved to bootstrap-accordion.html.twig:
+ *   3 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 14 strings of markup
  */
 function bootstrap_preprocess_bootstrap_accordion(&$variables) {
   $elements = $variables['elements'];
@@ -825,20 +731,15 @@ function bootstrap_preprocess_bootstrap_accordion(&$variables) {
 
   $variables['bootstrap_preprocess_bootstrap_accordion'] = $output;
 }
-/**
- * The following could probably be moved to bootstrap-accordion.html.twig:
- *   3 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 14 strings of markup
- */
 
 /**
- * Prepares variables for [description of bootstrap_search_form_wrapper] templates.
+ * Implements hook_preprocess_HOOK() for bootstrap-search-form-wrapper.html.twig
  *
- * Default template: bootstrap-search-form-wrapper.html.twig.
+ * @TODO: bootstrap_preprocess_bootstrap_search_form_wrapper() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $
- *   An associative array containing:
- *   - bootstrap_preprocess_bootstrap_search_form_wrapper: the markup outputted by the original bootstrap_bootstrap_search_form_wrapper theme function.
+ * The following could probably be moved to bootstrap-search-form-wrapper.html.twig:
+ *   1 call(s) to t(); can also use t as a filter in Twig
+ *   approximately 10 strings of markup
  */
 function bootstrap_preprocess_bootstrap_search_form_wrapper(&$variables) {
   $output = '<div class="input-append">';
@@ -850,20 +751,23 @@ function bootstrap_preprocess_bootstrap_search_form_wrapper(&$variables) {
   $output .= '</div>';
   $variables['bootstrap_preprocess_bootstrap_search_form_wrapper'] = $output;
 }
-/**
- * The following could probably be moved to bootstrap-search-form-wrapper.html.twig:
- *   1 call(s) to t(); can also use t as a filter in Twig
- *   approximately 10 strings of markup
- */
 
 /**
- * Prepares variables for [description of bootstrap_append_element] templates.
+ * Implements hook_preprocess_HOOK() for bootstrap-append-element.html.twig
  *
- * Default template: bootstrap-append-element.html.twig.
+ * @TODO: bootstrap_preprocess_bootstrap_append_element() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $
- *   An associative array containing:
- *   - bootstrap_preprocess_bootstrap_append_element: the markup outputted by the original bootstrap_bootstrap_append_element theme function.
+ * The following could probably be moved to bootstrap-append-element.html.twig:
+ *   approximately 91 strings of markup
+ *   2 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
+array(
+'#theme' => 'form_element_label',
+0# => ERROR: could not find T_ARRAY,
+)
+array(
+'#theme' => 'form_element_label',
+0# => ERROR: could not find T_ARRAY,
+)
  */
 function bootstrap_preprocess_bootstrap_append_element(&$variables) {
   $element = &$variables['element'];
@@ -972,28 +876,16 @@ function bootstrap_preprocess_bootstrap_append_element(&$variables) {
   }
   $variables['bootstrap_preprocess_bootstrap_append_element'] = $output;
 }
-/**
- * The following could probably be moved to bootstrap-append-element.html.twig:
- *   approximately 91 strings of markup
- *   2 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
-array(
-  '#theme' => 'form_element_label',
-  0# => ERROR: could not find T_ARRAY,
-)
-array(
-  '#theme' => 'form_element_label',
-  0# => ERROR: could not find T_ARRAY,
-)
- */
 
 /**
- * Prepares variables for [description of status_messages] templates.
+ * Implements hook_preprocess_HOOK() for status-messages.html.twig.
  *
- * Default template: status-messages.html.twig.
+ * @TODO bootstrap_preprocess_status_messages() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_status_messages: the markup outputted by the original bootstrap_status_messages theme function.
+ * The following could probably be moved to status-messages.html.twig:
+ *   4 call(s) to t(); can also use t as a filter in Twig
+ *   1 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 27 strings of markup
  */
 function bootstrap_preprocess_status_messages(&$variables) {
   $display = $variables['display'];
@@ -1042,28 +934,22 @@ function bootstrap_preprocess_status_messages(&$variables) {
   }
   $variables['bootstrap_preprocess_status_messages'] = $output;
 }
-/**
- * The following could probably be moved to status-messages.html.twig:
- *   4 call(s) to t(); can also use t as a filter in Twig
- *   1 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 27 strings of markup
- */
 
 /**
- * Prepares variables for [description of breadcrumb] templates.
+ * Implements hook_preprocess_HOOK() for breadcrumb.html.twig.
  *
- * Default template: breadcrumb.html.twig.
+ * @TODO bootstrap_preprocess_breadcrumb() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_breadcrumb: the markup outputted by the original bootstrap_breadcrumb theme function.
+ * The following could probably be moved to breadcrumb.html.twig:
+ *   1 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 6 strings of markup
  */
 function bootstrap_preprocess_breadcrumb(&$variables) {
   $breadcrumb = $variables['breadcrumb'];
 
   if (!empty($breadcrumb)) {
     $breadcrumbs = '<ul class="breadcrumb">';
-    
+
     $count = count($breadcrumb) - 1;
     foreach ($breadcrumb as $key => $value) {
       if ($count != $key) {
@@ -1074,24 +960,18 @@ function bootstrap_preprocess_breadcrumb(&$variables) {
       }
     }
     $breadcrumbs .= '</ul>';
-    
+
     $variables['bootstrap_preprocess_breadcrumb'] = $breadcrumbs;
   }
 }
-/**
- * The following could probably be moved to breadcrumb.html.twig:
- *   1 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 6 strings of markup
- */
 
 /**
- * Prepares variables for [description of item_list] templates.
+ * Implements hook_preprocess_HOOK() for item-list.html.twig.
  *
- * Default template: item-list.html.twig.
- *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_item_list: the markup outputted by the original bootstrap_item_list theme function.
+ * @TODO bootstrap_preprocess_item_list() - Needs refactoring. Move to theme.inc.php.
+ * The following could probably be moved to item-list.html.twig:
+ *   4 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 18 strings of markup
  */
 function bootstrap_preprocess_item_list(&$variables) {
   $items = $variables['items'];
@@ -1143,26 +1023,21 @@ function bootstrap_preprocess_item_list(&$variables) {
     }
     $output .= "</$type>";
   }
- 
+
   $variables['bootstrap_preprocess_item_list'] = $output;
 }
-/**
- * The following could probably be moved to item-list.html.twig:
- *   4 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 18 strings of markup
- */
 
 /**
- * Prepares variables for [description of progress_bar] templates.
+ * Implements hook_preprocess_HOOK() for progress-bar.html.twig.
  *
- * Default template: progress-bar.html.twig.
+ * @TODO bootstrap_preprocess_progress_bar() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_progress_bar: the markup outputted by the original bootstrap_progress_bar theme function.
+ * The following could probably be moved to progress-bar.html.twig:
+ *   3 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 10 strings of markup
  */
 function bootstrap_preprocess_progress_bar(&$variables) {
-  $output .= '<div id="progress" class="progress-wrapper">';
+  $output = '<div id="progress" class="progress-wrapper">';
   $output .= '  <div class="progress progress-striped progress-info active">';
   $output .= '    <div class="bar" style="width: ' . $variables['percent'] . '%"></div>';
   $output .= '  </div>';
@@ -1171,20 +1046,17 @@ function bootstrap_preprocess_progress_bar(&$variables) {
   $output .= '</div>';
   $variables['bootstrap_preprocess_progress_bar'] = $output;
 }
-/**
- * The following could probably be moved to progress-bar.html.twig:
- *   3 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 10 strings of markup
- */
 
 /**
- * Prepares variables for [description of pager] templates.
+ * Implements hook_preprocess_HOOK() for pager.html.twig.
  *
- * Default template: pager.html.twig.
+ * @TODO bootstrap_preprocess_pager() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_pager: the markup outputted by the original bootstrap_pager theme function.
+ * The following could probably be moved to pager.html.twig:
+ *   4 call(s) to t(); can also use t as a filter in Twig
+ *   4 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 62 strings of markup
+ *   7 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
  */
 function bootstrap_preprocess_pager(&$variables) {
   $output = "";
@@ -1300,52 +1172,23 @@ function bootstrap_preprocess_pager(&$variables) {
       //'attributes' => array('class' => array('pager')),
     )) . '</div>';
   }
-  
+
   $variables['bootstrap_preprocess_pager'] = $output;
 }
-/**
- * The following could probably be moved to pager.html.twig:
- *   4 call(s) to t(); can also use t as a filter in Twig
- *   4 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 62 strings of markup
- *   7 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
-array(
-  '#theme' => ERROR: could not find close parenthesis,
-)
-array(
-  '#theme' => ERROR: could not find close parenthesis,
-)
-array(
-  '#theme' => ERROR: could not find close parenthesis,
-)
-array(
-  '#theme' => ERROR: could not find close parenthesis,
-)
-array(
-  '#theme' => ERROR: could not find close parenthesis,
-)
-array(
-  '#theme' => ERROR: could not find close parenthesis,
-)
-array(
-  '#theme' => 'item_list',
-  0# => ERROR: could not find array key,
-)
- */
 
 /**
- * Prepares variables for [description of menu_link] templates.
+ * Implements hook_preprocess_HOOK() for menu-link.html.twig.
  *
- * Default template: menu-link.html.twig.
+ * @TODO bootstrap_preprocess_menu_link() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $
- *   An associative array containing:
- *   - bootstrap_preprocess_menu_link: the markup outputted by the original bootstrap_menu_link theme function.
+ * The following could probably be moved to menu-link.html.twig:
+ *   2 call(s) to drupal_render()
+ *   approximately 57 strings of markup
  */
 function bootstrap_preprocess_menu_link(&$variables) {
   $element = $variables['element'];
   $sub_menu = '';
-  
+
   if ($element['#below']) {
 
     // Prevent dropdown functions from being added to management menu as to not affect navbar module.
@@ -1384,71 +1227,52 @@ function bootstrap_preprocess_menu_link(&$variables) {
   $output = l($element['#title'], $element['#href'], $element['#localized_options']);
   $variables['bootstrap_preprocess_menu_link'] = '<li' . new Drupal\Core\Template\Attribute($element['#attributes']) . '>' . $output . $sub_menu . "</li>\n";
 }
-/**
- * The following could probably be moved to menu-link.html.twig:
- *   2 call(s) to drupal_render()
- *   approximately 57 strings of markup
- */
 
 /**
- * Prepares variables for [description of menu_tree__primary] templates.
+ * Implements hook_preprocess_HOOK() for menu-tree-primary.html.twig.
  *
- * Default template: menu-tree--primary.html.twig.
+ * @TODO bootstrap_preprocess_menu_tree__primary() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $
- *   An associative array containing:
- *   - bootstrap_preprocess_menu_tree__primary: the markup outputted by the original bootstrap_menu_tree__primary theme function.
+ * The following could probably be moved to menu-tree-primary.html.twig:
+ *   approximately 3 strings of markup
  */
 function bootstrap_preprocess_menu_tree__primary(&$variables) {
   $variables['bootstrap_preprocess_menu_tree__primary'] = '<ul class="menu nav">' . $variables['tree'] . '</ul>';
 }
-/**
- * The following could probably be moved to menu-tree--primary.html.twig:
- *   approximately 3 strings of markup
- */
 
 /**
- * Prepares variables for [description of menu_tree__secondary] templates.
+ * Implements hook_preprocess_HOOK() for menu-tree-secondary.html.twig.
  *
- * Default template: menu-tree--secondary.html.twig.
+ * @TODO bootstrap_preprocess_menu_tree__secondary() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $
- *   An associative array containing:
- *   - bootstrap_preprocess_menu_tree__secondary: the markup outputted by the original bootstrap_menu_tree__secondary theme function.
+ * The following could probably be moved to menu-tree--secondary.html.twig:
+ *   approximately 3 strings of markup
  */
 function bootstrap_preprocess_menu_tree__secondary(&$variables) {
   $variables['bootstrap_preprocess_menu_tree__secondary'] = '<ul class="menu nav pull-right">' . $variables['tree'] . '</ul>';
 }
-/**
- * The following could probably be moved to menu-tree--secondary.html.twig:
- *   approximately 3 strings of markup
- */
 
 /**
- * Prepares variables for [description of menu_tree] templates.
+ * Implements hook_preprocess_HOOK() for menu-tree.html.twig.
  *
- * Default template: menu-tree.html.twig.
+ * @TODO bootstrap_preprocess_menu_tree() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $
- *   An associative array containing:
- *   - bootstrap_preprocess_menu_tree: the markup outputted by the original bootstrap_menu_tree theme function.
+ * The following could probably be moved to menu-tree.html.twig:
+ *   approximately 3 strings of markup
  */
 function bootstrap_preprocess_menu_tree(&$variables) {
   $variables['bootstrap_preprocess_menu_tree'] = '<ul class="menu nav">' . $variables['tree'] . '</ul>';
 }
-/**
- * The following could probably be moved to menu-tree.html.twig:
- *   approximately 3 strings of markup
- */
 
 /**
- * Prepares variables for [description of menu_local_task] templates.
+ * Implements hook_preprocess_HOOK() for menu-local-task.html.twig.
  *
- * Default template: menu-local-task.html.twig.
+ * @TODO bootstrap_preprocess_menu_local_task() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_menu_local_task: the markup outputted by the original bootstrap_menu_local_task theme function.
+ * The following could probably be moved to menu-local-task.html.twig:
+ *   2 call(s) to t(); can also use t as a filter in Twig
+ *   2 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 23 strings of markup
  */
 function bootstrap_preprocess_menu_local_task(&$variables) {
   $link = $variables['element']['#link'];
@@ -1472,21 +1296,15 @@ function bootstrap_preprocess_menu_local_task(&$variables) {
 
   $variables['bootstrap_preprocess_menu_local_task'] = '<li class="' . implode(' ', $classes) . '">' . l($link_text, $link['href'], $link['localized_options']) . "</li>\n";
 }
-/**
- * The following could probably be moved to menu-local-task.html.twig:
- *   2 call(s) to t(); can also use t as a filter in Twig
- *   2 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 23 strings of markup
- */
 
 /**
- * Prepares variables for [description of menu_local_action] templates.
+ * Implements hook_preprocess_HOOK() for menu-local-action.html.twig.
  *
- * Default template: menu-local-action.html.twig.
+ * @TODO bootstrap_preprocess_menu_local_action() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_menu_local_action: the markup outputted by the original bootstrap_menu_local_action theme function.
+ * The following could probably be moved to menu-local-action.html.twig:
+ *   1 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 24 strings of markup
  */
 function bootstrap_preprocess_menu_local_action(&$variables) {
   $link = $variables['element']['#link'];
@@ -1521,20 +1339,15 @@ function bootstrap_preprocess_menu_local_action(&$variables) {
 
   $variables['bootstrap_preprocess_menu_local_action'] = $output;
 }
-/**
- * The following could probably be moved to menu-local-action.html.twig:
- *   1 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 24 strings of markup
- */
 
 /**
- * Prepares variables for [description of menu_local_tasks] templates.
+ * Implements hook_preprocess_HOOK() for menu-local-tasks.html.twig.
  *
- * Default template: menu-local-tasks.html.twig.
- *
- * @param array $
- *   An associative array containing:
- *   - bootstrap_preprocess_menu_local_tasks: the markup outputted by the original bootstrap_menu_local_tasks theme function.
+ * @TODO bootstrap_preprocess_menu_local_tasks() - Needs refactoring. Move to theme.inc.php.
+ * The following could probably be moved to menu-local-tasks.html.twig:
+ *   2 call(s) to drupal_render()
+ *   2 call(s) to t(); can also use t as a filter in Twig
+ *   approximately 27 strings of markup
  */
 function bootstrap_preprocess_menu_local_tasks(&$variables) {
   $output = '';
@@ -1555,21 +1368,15 @@ function bootstrap_preprocess_menu_local_tasks(&$variables) {
 
   $variables['bootstrap_preprocess_menu_local_tasks'] = $output;
 }
-/**
- * The following could probably be moved to menu-local-tasks.html.twig:
- *   2 call(s) to drupal_render()
- *   2 call(s) to t(); can also use t as a filter in Twig
- *   approximately 27 strings of markup
- */
 
 /**
- * Prepares variables for [description of button] templates.
+ * Implements hook_preprocess_HOOK() for button.html.twig.
  *
- * Default template: button.html.twig.
+ * @TODO bootstrap_preprocess_button() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $variables
- *   An associative array containing:
- *   - bootstrap_preprocess_button: the markup outputted by the original bootstrap_button theme function.
+ * The following could probably be moved to button.html.twig:
+ *   1 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
+ *   approximately 23 strings of markup
  */
 function bootstrap_preprocess_button(&$variables) {
   $element = &$variables['element'];
@@ -1627,20 +1434,15 @@ function bootstrap_preprocess_button(&$variables) {
     $variables['bootstrap_preprocess_button'] = '<button' . new Drupal\Core\Template\Attribute($element['#attributes']) . '>'. $label ."</button>\n"; // This line break adds inherent margin between multiple buttons
   }
 }
-/**
- * The following could probably be moved to button.html.twig:
- *   1 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 23 strings of markup
- */
 
 /**
- * Prepares variables for [description of form_element] templates.
+ * Implements hook_preprocess_HOOK() for form-element.html.twig.
  *
- * Default template: form-element.html.twig.
+ * @TODO bootstrap_preprocess_form_element() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $
- *   An associative array containing:
- *   - bootstrap_preprocess_form_element: the markup outputted by the original bootstrap_form_element theme function.
+ * The following could probably be moved to form-element.html.twig:
+ *   approximately 89 strings of markup
+ *   2 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
  */
 function bootstrap_preprocess_form_element(&$variables) {
   $element = &$variables['element'];
@@ -1738,28 +1540,19 @@ function bootstrap_preprocess_form_element(&$variables) {
   }
   $variables['bootstrap_preprocess_form_element'] = $output;
 }
-/**
- * The following could probably be moved to form-element.html.twig:
- *   approximately 89 strings of markup
- *   2 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
-array(
-  '#theme' => 'form_element_label',
-  0# => ERROR: could not find T_ARRAY,
-)
-array(
-  '#theme' => 'form_element_label',
-  0# => ERROR: could not find T_ARRAY,
-)
- */
 
 /**
- * Prepares variables for [description of form_element_label] templates.
+ * Implements hook_preprocess_HOOK() for form-element-label.html.twig.
  *
- * Default template: form-element-label.html.twig.
+ * @TODO bootstrap_preprocess_form_element_label() - Needs refactoring. Move to theme.inc.php.
  *
- * @param array $
- *   An associative array containing:
- *   - bootstrap_preprocess_form_element_label: the markup outputted by the original bootstrap_form_element_label theme function.
+ * The following could probably be moved to form-element-label.html.twig:
+ *   approximately 37 strings of markup
+ *   1 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
+array(
+'#theme' => 'form_required_marker',
+'#element' => $element,
+)
  */
 function bootstrap_preprocess_form_element_label(&$variables) {
   $element = $variables['element'];
@@ -1807,13 +1600,3 @@ function bootstrap_preprocess_form_element_label(&$variables) {
   // The leading whitespace helps visually separate fields from inline labels.
   $variables['bootstrap_preprocess_form_element_label'] = ' <label' . new Drupal\Core\Template\Attribute($attributes) . '>' . $output . "</label>\n";
 }
-/**
- * The following could probably be moved to form-element-label.html.twig:
- *   approximately 37 strings of markup
- *   1 call(s) to theme() found.  The function call should be removed and changed to simple arrays:
-array(
-  '#theme' => 'form_required_marker',
-  '#element' => $element,
-)
- */
-
