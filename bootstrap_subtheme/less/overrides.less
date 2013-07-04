@@ -56,30 +56,18 @@ body {
     // http://drupal.org/node/1870076
     position: relative;
   }
-  @media @normal, @wide {
-    padding-top: 60px;
-  }
-  // Core admin toolbar.
-  &.contextualToolbar-init-processed .navbar-fixed-top {
-   top: 39px;
-  }
-  &.toolbar-drawer .navbar-fixed-top {
-   top: 65px;
-  }
   &.admin-expanded.admin-vertical.admin-nw .navbar,
   &.admin-expanded.admin-vertical.admin-sw .navbar {
     margin-left: 260px;
   }
+  .toolbar .bar {
+    .box-shadow(none);
+  }
+  .navbar-static-top {
+    margin-bottom: 20px;
+  }
   div#admin-toolbar {
     z-index: 500;
-  }
-  @media @normal, @wide {
-    &.contextualToolbar-init-processed {
-      padding-top: 94px !important;
-    }
-    &.toolbar-drawer {
-      padding-top: 129px !important;
-    }
   }
   // Admin_menu toolbar.
   #admin-menu {
@@ -166,6 +154,11 @@ ul.action-links {
   [class^="icon-"], [class*=" icon-"] {
     padding-right: 0.5em;
   }
+}
+
+// Breadcrumbs
+.breadcrumb li:before {
+  content: "";
 }
 
 // Form elements.

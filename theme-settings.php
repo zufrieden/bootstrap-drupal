@@ -1,6 +1,6 @@
 <?php
 
-include_once(dirname(__FILE__) . '/includes/bootstrap.inc');
+include_once(dirname(__FILE__) . '/modules/bootstrap.inc');
 
 function bootstrap_form_system_theme_settings_alter(&$form, $form_state, $form_id = NULL) {
   // Work-around for a core bug affecting admin themes. See issue #943212.

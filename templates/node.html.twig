@@ -1,12 +1,12 @@
-<article id="node-{{ node.nid }}" class="{{ classes }} clearfix"{{ attributes }}>
+<article id="node-{{ node.nid }}" class="{{ attributes.class }} clearfix"{{ attributes }}>
 
 
   <header>
-    {{ title_prefix }}
-    {% if not page and title %}
-      <h2{{ title_attributes }}><a href="{{ node_url }}">{{ title }}</a></h2>
+    {% if (not page) and label %}
+      {{ title_prefix }}
+      <h2{{ title_attributes }}><a href="{{ node_url }}">{{ label }}</a></h2>
+      {{ title_suffix }}
     {% endif %}
-    {{ title_suffix }}
 
     {% if display_submitted %}
       <span class="submitted">
@@ -16,12 +16,13 @@
     {% endif %}
   </header>
 
-  {#
-// Hide comments, tags, and links now so that we can render them later.
-#}    {% hide(content.comments) %}
-    {% hide(content.links) %}
-    {% hide(content.field_tags) %}
+  {# Hide comments, tags, and links now so that we can render them later. #}
+  {% hide(content.comments) %}
+  {% hide(content.links) %}
+  {% hide(content.field_tags) %}
+  <div{{ content_attributes }}>
     {{ content }}
+  </div>
 
   {% if content.field_tags or content.links %}
     <footer>
