@@ -5,6 +5,8 @@
  * Form alter and theme preprocess functions.
  */
 
+use Drupal\Core\Template\Attribute;
+
 /**
  * Implements hook_form_alter().
  *
@@ -397,69 +399,71 @@ function bootstrap_preprocess_form_element_label(&$variables) {
   $variables['bootstrap_preprocess_form_element_label'] = ' <label' . new Drupal\Core\Template\Attribute($attributes) . '>' . $output . "</label>\n";
 }
 
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function bootstrap_preprocess_input(&$variables) {
+  // Process buttons, adding classes if necessary.
+  if (in_array($variables['theme_hook_original'], array('input__submit', 'input__button'))) {
+    _bootstrap_button($variables);
+  }
+}
 
 /**
- * Implements hook_preprocess_HOOK() for button.html.twig.
- *
- * @TODO bootstrap_preprocess_button() - Needs refactoring. Move to theme.inc.php.
- *
- * The following could probably be moved to button.html.twig:
- *   1 reference(s) to $variables; NB: just use the array key in the template (without trying to access variables)
- *   approximately 23 strings of markup
+ * Adds necessary button classes for Bootstrap.
  */
-function bootstrap_preprocess_button(&$variables) {
-  $element = &$variables['element'];
-  $element['#attributes']['class'][] = 'btn';
+function _bootstrap_button(&$variables) {
+  // Skip white-listed elements.
+  if (isset($element['#id']) && in_array($element['#id'], _bootstrap_element_whitelist())) {
+    return;
+  }
 
-  if (isset($element['#value'])) {
-    $classes = array(
-      //specifics
-      t('Save and add') => 'btn-info',
-      t('Add another item') => 'btn-info',
-      t('Add effect') => 'btn-primary',
-      t('Add and configure') => 'btn-primary',
-      t('Update style') => 'btn-primary',
-      t('Download feature') => 'btn-primary',
+  // Reference the attributes array.
+  $attributes = &$variables['element']['#attributes'];
 
-      //generals
-      t('Save') => 'btn-primary',
-      t('Apply') => 'btn-primary',
-      t('Create') => 'btn-primary',
-      t('Confirm') => 'btn-primary',
-      t('Submit') => 'btn-primary',
-      t('Export') => 'btn-primary',
-      t('Import') => 'btn-primary',
-      t('Restore') => 'btn-primary',
-      t('Rebuild') => 'btn-primary',
-      t('Search') => 'btn-primary',
-      t('Add') => 'btn-info',
-      t('Update') => 'btn-info',
-      t('Delete') => 'btn-danger',
-      t('Remove') => 'btn-danger',
+  // Unset core added classes.
+  foreach (array_keys($attributes['class'], 'button') as $key) {
+    unset($attributes['class'][$key]);
+  }
+  foreach (array_keys($attributes['class'], 'button-primary') as $key) {
+    unset($attributes['class'][$key]);
+  }
+
+  // Add default button class.
+  $attributes['class'][] = 'btn';
+
+  // Add additional classes for buttons that contain certain text.
+  if (!empty($variables['element']['#value'])) {
+    $values = array(
+      // Specific values.
+      t('Save and add')       => 'btn-info',
+      t('Add another item')   => 'btn-info',
+      t('Add effect')         => 'btn-primary',
+      t('Add and configure')  => 'btn-primary',
+      t('Update style')       => 'btn-primary',
+      t('Download feature')   => 'btn-primary',
+      // General values.
+      t('Save')     => 'btn-primary',
+      t('Apply')    => 'btn-primary',
+      t('Create')   => 'btn-primary',
+      t('Confirm')  => 'btn-primary',
+      t('Submit')   => 'btn-primary',
+      t('Export')   => 'btn-primary',
+      t('Import')   => 'btn-primary',
+      t('Restore')  => 'btn-primary',
+      t('Rebuild')  => 'btn-primary',
+      t('Search')   => 'btn-primary',
+      t('Add')      => 'btn-info',
+      t('Update')   => 'btn-info',
+      t('Delete')   => 'btn-danger',
+      t('Remove')   => 'btn-danger',
     );
-    foreach ($classes as $search => $class) {
-      if (strpos($element['#value'], $search) !== FALSE) {
-        $element['#attributes']['class'][] = $class;
+    foreach ($values as $value => $class) {
+      if (strpos($variables['element']['#value'], $value) !== FALSE) {
+        $attributes['class'][] = $class;
         break;
       }
     }
   }
-
-  $label = $element['#value'];
-  element_set_attributes($element, array('id', 'name', 'value', 'type'));
-
-  $element['#attributes']['class'][] = 'form-' . $element['#button_type'];
-  if (!empty($element['#attributes']['disabled'])) {
-    $element['#attributes']['class'][] = 'form-button-disabled';
-  }
-
-  // Prepare input whitelist - added to ensure ajax functions don't break
-  $whitelist = _bootstrap_element_whitelist();
-
-  if (isset($element['#id']) && in_array($element['#id'], $whitelist)) {
-    $variables['bootstrap_preprocess_button'] = '<input' . new Drupal\Core\Template\Attribute($element['#attributes']) . ">\n"; // This line break adds inherent margin between multiple buttons
-  }
-  else {
-    $variables['bootstrap_preprocess_button'] = '<button' . new Drupal\Core\Template\Attribute($element['#attributes']) . '>'. $label ."</button>\n"; // This line break adds inherent margin between multiple buttons
-  }
+  $variables['attributes'] = new Attribute($attributes);
 }
